@@ -1,0 +1,121 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\title{Numerical Simulation of Inferior and Superior Atmospheric Mirages}
+\author{Research Assistant}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Atmospheric mirages are optical phenomena caused by the refraction of light rays passing through air layers of varying temperatures and densities. This paper presents a numerical study of two distinct types of mirages: the inferior mirage, commonly observed in deserts, and the superior mirage (Fata Morgana), often seen over cold bodies of water. We employ a ray-tracing technique based on Fermat's principle, solving the optical path differential equations using a fourth-order Runge-Kutta (RK4) integrator. We define mathematical models for the refractive index profiles characteristic of each environment---an exponential decay model for the heated desert surface and a dual-exponential inversion model for the cold ocean surface. The simulation results successfully demonstrate the upward curvature of rays in the inferior mirage and the complex ducting and downward curvature associated with the superior mirage.
+\end{abstract}
+
+\section{Introduction}
+A mirage is a naturally occurring optical phenomenon in which light rays are bent to produce a displaced image of distant objects or the sky. The fundamental physical principle behind mirages is the variation of the refractive index of air, $n$, which depends on air density and, consequently, temperature.
+
+Mirages are broadly classified into two categories:
+\begin{itemize}
+    \item \textbf{Inferior Mirage:} Occurs when the ground is significantly hotter than the air above it (e.g., a desert or asphalt road). The air near the ground is less dense and has a lower refractive index than the cooler air above. This gradient causes light rays traveling downwards to bend upwards, creating an inverted image below the object derived from sky light.
+    \item \textbf{Superior Mirage:} Occurs when the air near the surface is colder than the air above it (a temperature inversion). This is common over cold oceans. The denser air near the surface has a higher refractive index. This causes light rays to bend downwards. Under specific conditions, rays can become trapped in an atmospheric duct, leading to complex distortions known as the Fata Morgana.
+\end{itemize}
+
+This work implements a computational framework to simulate these phenomena by integrating the ray equations through defined atmospheric models.
+
+\section{Physical Models and Methodology}
+
+\subsection{Ray Equation}
+Light travels through a medium with a spatially varying refractive index $n(x, y)$. According to Fermat's principle, light takes the path that minimizes the optical path length $S = \int n \, ds$. This leads to the ray equation:
+\begin{equation}
+\frac{d}{ds} \left( n \frac{d\mathbf{r}}{ds} \right) = \nabla n
+\end{equation}
+For a stratified atmosphere where $n$ varies only with height $y$ (i.e., $n = n(y)$), the 2D equations of motion for a ray $[x(s), y(s)]$ with tangent vector $[v_x, v_y]$ become:
+\begin{align}
+\frac{dx}{ds} &= v_x, \quad \frac{dy}{ds} = v_y \\
+\frac{dv_x}{ds} &= -\frac{v_y v_x}{n} \frac{dn}{dy} \\
+\frac{dv_y}{ds} &= \frac{v_x^2}{n} \frac{dn}{dy}
+\end{align}
+
+\subsection{Desert Atmosphere Model (Inferior Mirage)}
+For the desert scenario, we model the intense heating near the ground using a perturbed exponential profile. The base index $n_{base}$ is modified by a term that decreases rapidly with height:
+\begin{equation}
+n(y) = n_{base} - \Delta n \cdot \exp(-y / H)
+\end{equation}
+where $\Delta n$ determines the strength of the gradient at the surface and $H$ is the scale height of the boundary layer.
+The gradient is positive everywhere ($\frac{dn}{dy} > 0$), which forces rays to curve \textit{upward} (away from the ground).
+
+\subsection{Ocean Atmosphere Model (Superior Mirage)}
+For the ocean scenario, we model a temperature inversion where a layer of cold air sits below warmer air. We use a dual-exponential profile to capture both the inversion and the normal atmospheric lapse rate above it:
+\begin{equation}
+n(y) = n_{base} + A \cdot \exp(-y / h_1) - B \cdot \exp(-y / h_2)
+\end{equation}
+Here, the term with $A$ represents the cold, high-density layer near the surface (increasing $n$), while the term with $B$ represents the standard decrease of density with altitude.
+The interplay between these terms creates a region where $\frac{dn}{dy} < 0$, causing rays to bend \textit{downward}. If the curvature of the ray matches the curvature of the Earth (or in this flat-earth approximation, if the ray bends down sufficiently to stay within the layer), "ducting" occurs.
+
+\section{Implementation}
+The simulation is implemented in Python. The core solver uses the explicit fourth-order Runge-Kutta (RK4) method to integrate the system of first-order differential equations derived in Section 2.1.
+\begin{itemize}
+    \item \textbf{Integration Step:} We use a fixed step size $ds$ (0.5m for desert, 10m for ocean) to ensure numerical stability.
+    \item \textbf{Parameters:}
+    \begin{itemize}
+        \item Desert: $\Delta n = 2.4 \times 10^{-4}$, $H = 3.0$ m.
+        \item Ocean: $A = 1.2 \times 10^{-4}$, $B = 4.0 \times 10^{-5}$, $h_1 = 12$ m, $h_2 = 40$ m.
+    \end{itemize}
+\end{itemize}
+
+\section{Results and Discussion}
+
+\subsection{Inferior Mirage Simulation}
+Figure \ref{fig:desert_profile} shows the refractive index profile for the desert model. The sharp decrease in $n$ approaches the ground ($y=0$). Figure \ref{fig:desert_rays} illustrates the trajectories of light rays. Rays emitted downwards (negative initial angle) are refracted upwards by the positive gradient. To an observer, these rays appear to originate from below the ground, creating the illusion of a reflection (often mistaken for water).
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{desert_profile.png}
+        \caption{Refractive Index Profile $n(y)$}
+        \label{fig:desert_profile}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{desert_rays.png}
+        \caption{Ray Trajectories}
+        \label{fig:desert_rays}
+    \end{subfigure}
+    \caption{Simulation of the Inferior (Desert) Mirage.}
+\end{figure}
+
+\subsection{Superior Mirage Simulation}
+Figure \ref{fig:ocean_profile} displays the refractive index profile for the ocean model, showing a characteristic "kink" or inversion where density is highest near the surface. Figure \ref{fig:ocean_rays} shows the ray traces. Rays launched horizontally or with slight elevation can be trapped in the duct created by the inversion layer ($y < 20$m). These rays travel long distances, allowing objects (like ships) to be seen well beyond the geometric horizon or to appear vertically stretched (looming).
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{ocean_profile.png}
+        \caption{Refractive Index Profile $n(y)$}
+        \label{fig:ocean_profile}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{ocean_rays.png}
+        \caption{Ray Trajectories}
+        \label{fig:ocean_rays}
+    \end{subfigure}
+    \caption{Simulation of the Superior (Ocean) Mirage.}
+\end{figure}
+
+\section{Conclusion}
+We successfully simulated and visualized the optical behavior of inferior and superior mirages using a numerical ray-tracing approach. The results confirm that simple exponential models of the atmospheric refractive index are sufficient to reproduce the qualitative features of these complex phenomena. The desert model effectively demonstrated the "puddle" effect, while the ocean model exhibited the conditions necessary for ducting and the Fata Morgana effect. Future work could include the curvature of the Earth and more complex 3D temperature profiles.
+
+\end{document}

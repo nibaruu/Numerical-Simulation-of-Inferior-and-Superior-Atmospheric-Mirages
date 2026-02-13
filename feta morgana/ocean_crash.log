@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "c:\Users\nibaru\Downloads\nibel\nibel\ocean_mirage\main.py", line 6, in main
+    from PyQt6.QtWidgets import QApplication
+ModuleNotFoundError: No module named 'PyQt6'

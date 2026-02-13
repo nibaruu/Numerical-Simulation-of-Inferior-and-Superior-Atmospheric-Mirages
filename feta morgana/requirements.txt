@@ -1,0 +1,13 @@
+PyQt6>=6.5.0
+matplotlib>=3.8.0
+numpy>=1.25.0
+scipy>=1.11.0
+
+# ─────────────────────────────────────────────────────────────
+# Installation:
+#   pip install -r requirements.txt
+#
+# Running:
+#   Desert mirage:   cd desert_mirage && python main.py
+#   Ocean mirage:    cd ocean_mirage  && python main.py
+# ─────────────────────────────────────────────────────────────
